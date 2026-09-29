@@ -29,7 +29,17 @@ export function FormField({ name, value, error, onChange, onBlur, children }: Pr
       <label htmlFor={name}>
         {config.label}{config.optional ? <span className="optional">Opcional</span> : <span className="required" aria-hidden="true"> *</span>}
       </label>
-      {config.type === "select" ? (
+      {config.type === "choice" ? (
+        <div className="choice-group" role="radiogroup" aria-label={config.label}>
+          {config.options?.map((option) => (
+            <label className={`choice-option${value === option ? " selected" : ""}`} key={option}>
+              <input type="radio" name={name} value={option} checked={value === option} required onChange={() => onChange(name, option)} onBlur={() => onBlur(name)} />
+              <span className="choice-dot" aria-hidden="true" />
+              <span>{option}</span>
+            </label>
+          ))}
+        </div>
+      ) : config.type === "select" ? (
         <select {...props}>
           <option value="" disabled>Seleccioná una opción</option>
           {IVA_OPTIONS.map((option) => <option key={option} value={option}>{option}</option>)}

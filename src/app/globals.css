@@ -32,8 +32,8 @@ h1 { margin: 0 0 12px; font-size: clamp(28px, 3vw, 34px); line-height: 1.15; let
 .form-note strong { color: var(--navy); }
 .step-counter { color: var(--navy); font-size: 10px; font-weight: 700; letter-spacing: .1em; white-space: nowrap; }
 .form-progress { margin: 0 auto 24px; max-width: 470px; }
-.progress-list { display: grid; grid-template-columns: 1fr 1fr; list-style: none; padding: 0; margin: 0; position: relative; }
-.progress-list::before { content: ""; position: absolute; top: 18px; left: 25%; right: 25%; height: 1px; background: #bbcdd6; }
+.progress-list { display: grid; grid-template-columns: repeat(3, 1fr); list-style: none; padding: 0; margin: 0; position: relative; }
+.progress-list::before { content: ""; position: absolute; top: 18px; left: 16.66%; right: 16.66%; height: 1px; background: #bbcdd6; }
 .progress-list.first-complete::before { background: #168d8a; }
 .progress-list li { position: relative; text-align: center; }
 .progress-list button { display: flex; align-items: center; flex-direction: column; gap: 6px; border: 0; color: var(--muted); background: transparent; width: 100%; padding: 0 6px; border-radius: 10px; }
@@ -72,6 +72,13 @@ h1 { margin: 0 0 12px; font-size: clamp(28px, 3vw, 34px); line-height: 1.15; let
 .field-error { color: var(--error); }
 .field .checkbox-label { display: flex; align-items: center; gap: 9px; margin: 11px 0 -2px; font-weight: 400; font-size: 12px; min-height: 24px; cursor: pointer; }
 .checkbox-label input { width: 17px; height: 17px; margin: 0; accent-color: var(--navy); flex-shrink: 0; }
+.choice-group { display: flex; flex-wrap: wrap; gap: 10px; }
+.choice-option { position: relative; display: inline-flex; align-items: center; gap: 9px; min-height: 42px; padding: 10px 18px; border: 1px solid #bdcdd6; border-radius: 24px; color: var(--navy); background: #fff; cursor: pointer; font-size: 13px; transition: border-color .15s, background .15s, box-shadow .15s; }
+.choice-option input { position: absolute; opacity: 0; pointer-events: none; }
+.choice-option:hover { border-color: #6d899e; }
+.choice-option.selected { border-color: var(--navy); background: #effaf9; box-shadow: 0 0 0 2px #53eddf55; }
+.choice-dot { width: 12px; height: 12px; border: 1px solid #8ca5b3; border-radius: 50%; background: #fff; }
+.choice-option.selected .choice-dot { border: 4px solid var(--navy); }
 .form-submit { background: #fbfdfd; border-top: 1px solid var(--line); padding: 18px 28px; }
 .submit-row { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
 .submit-row > p { margin: 0; font-size: 11px; line-height: 1.6; color: var(--muted); }

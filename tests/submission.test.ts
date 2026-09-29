@@ -13,19 +13,18 @@ function request(body: unknown = validSubmission, headers: Record<string, string
 }
 const defaults = { webhookUrl: "https://hook.example.com/local-test-only", limit: () => 0 };
 
-test("Make 2xx produces only minimal success with normalized, allowlisted payload", async () => {
+test("Make 2xx produces only minimal success with exactly the Google Form payload", async () => {
   let payload: Record<string, unknown> = {};
-  const result = await submitExpositor(request({ ...validSubmission, reservationReference: "ABC123", website: "", injected: "omit" }), {
+  const result = await submitExpositor(request({ ...validSubmission, website: "", injected: "omit" }), {
     ...defaults,
     fetcher: async (_url, options) => { payload = JSON.parse(String(options?.body)); return new Response("Accepted", { status: 202 }); },
   });
   assert.equal(result.status, 200);
   assert.deepEqual(await result.json(), { ok: true });
   assert.equal(payload.cuit, "30123456781");
-  assert.equal(payload.reservationReference, "ABC123");
   assert.match(String(payload.submissionId), /^[a-f0-9]{64}$/);
   assert.ok(!Number.isNaN(Date.parse(String(payload.submittedAt))));
-  assert.equal(Object.keys(payload).length, 17);
+  assert.equal(Object.keys(payload).length, 15);
   assert.equal(payload.website, undefined);
   assert.equal(payload.injected, undefined);
 });
@@ -58,7 +57,6 @@ test("validation, honeypot, malformed data, origins, content type and oversize r
     [request({ ...validSubmission, cuit: "30123456782" }), 422],
     [request({ ...validSubmission, emailStand: "invalid" }), 422],
     [request({ ...validSubmission, website: "spam" }), 400],
-    [request({ ...validSubmission, reservationReference: {} }), 400],
     [request(validSubmission, { Origin: "https://other.example" }), 403],
     [request(validSubmission, { "Content-Type": "text/plain" }), 415],
     [request(validSubmission, { "Idempotency-Key": "bad" }), 400],

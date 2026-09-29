@@ -1,9 +1,8 @@
-import { FIELDS, FIELD_NAMES, IVA_OPTIONS, type FieldConfig, type FieldErrors, type FormValues } from "./form-config";
+import { FIELDS, FIELD_NAMES, IVA_OPTIONS, PAYMENT_OPTIONS, type FieldConfig, type FieldErrors, type FormValues } from "./form-config";
 
 export function normalizeCuit(value: string): string {
   return value.trim().replace(/-/g, "");
 }
-
 export function isValidCuit(value: string): boolean {
   const digits = normalizeCuit(value);
   if (!/^\d{11}$/.test(digits) || /^(\d)\1{10}$/.test(digits)) return false;
@@ -38,11 +37,7 @@ export function validateForm(input: unknown): { data: FormValues; errors: FieldE
   if (data.cuit && !errors.cuit && !isValidCuit(data.cuit)) errors.cuit = "Ingresá un CUIT válido de 11 dígitos.";
   data.cuit = normalizeCuit(data.cuit);
   if (data.condicionIVA && !(IVA_OPTIONS as readonly string[]).includes(data.condicionIVA)) errors.condicionIVA = "Seleccioná una condición frente al IVA válida.";
+  if (data.formaPago && !(PAYMENT_OPTIONS as readonly string[]).includes(data.formaPago)) errors.formaPago = "Seleccioná una forma de pago válida.";
   return { data, errors, valid: Object.keys(errors).length === 0 };
 }
 
-export function normalizeReservation(value: unknown): string | null {
-  if (typeof value !== "string") return null;
-  const trimmed = value.trim();
-  return /^[\p{L}\p{N}_.-]{1,100}$/u.test(trimmed) ? trimmed : null;
-}

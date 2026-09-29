@@ -1,14 +1,14 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { FIELD_NAMES } from "../src/lib/form-config";
-import { isValidCuit, normalizeCuit, normalizeReservation, validateForm } from "../src/lib/validation";
+import { isValidCuit, normalizeCuit, validateForm } from "../src/lib/validation";
 import { validSubmission } from "./fixtures";
 
-test("all thirteen required fields fail independently; commercial name stays optional", () => {
+test("all thirteen fields from the previous Google Form are required", () => {
   const result = validateForm({});
   assert.equal(Object.keys(result.errors).length, 13);
-  for (const name of FIELD_NAMES.filter((field) => field !== "nombreComercial")) assert.ok(result.errors[name]);
-  assert.ok(validateForm({ ...validSubmission, nombreComercial: "" }).valid);
+  for (const name of FIELD_NAMES) assert.ok(result.errors[name]);
+  assert.ok(validateForm(validSubmission).valid);
 });
 
 test("CUIT check digit accepts hyphens and digits; rejects wrong length, letters and checksum", () => {
@@ -34,7 +34,9 @@ test("normalization trims edges but preserves meaningful multiline invoice text"
   assert.equal(result.data.cuit, "30123456781");
 });
 
-test("reservation references are optional, bounded and restricted to identifier characters", () => {
-  assert.equal(normalizeReservation(" ABC123 "), "ABC123");
-  for (const value of [null, [], "", "x".repeat(101), "person@example.com", "<script>"]) assert.equal(normalizeReservation(value), null);
+test("only the requested IVA values and payment methods are accepted", () => {
+  for (const value of ["Responsable Inscripto", "Exento"]) assert.ok(validateForm({ ...validSubmission, condicionIVA: value }).valid);
+  for (const value of ["Monotributista", "Consumidor Final", "Otro"]) assert.ok(validateForm({ ...validSubmission, condicionIVA: value }).errors.condicionIVA);
+  for (const value of ["Cheque", "Transferencia"]) assert.ok(validateForm({ ...validSubmission, formaPago: value }).valid);
+  assert.ok(validateForm({ ...validSubmission, formaPago: "Efectivo" }).errors.formaPago);
 });

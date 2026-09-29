@@ -1,18 +1,18 @@
-const STEPS = ["Datos de la empresa", "Facturación y pago"];
+const STEPS = ["Datos de la empresa", "Datos del expositor", "Gestión de pago"];
 
 type Props = {
   step: number;
-  companyComplete: boolean;
+  completedSteps: boolean[];
   disabled: boolean;
   onSelect?: (step: number) => void;
 };
 
-export function FormProgress({ step, companyComplete, disabled, onSelect }: Props) {
+export function FormProgress({ step, completedSteps, disabled, onSelect }: Props) {
   return (
     <nav className="form-progress" aria-label="Progreso del formulario">
-      <ol className={companyComplete ? "progress-list first-complete" : "progress-list"}>
+      <ol className={completedSteps[0] ? "progress-list first-complete" : "progress-list"}>
         {STEPS.map((label, index) => {
-          const complete = step === 2 || (index === 0 && companyComplete && step !== 0);
+          const complete = completedSteps[index] || step > index;
           return (
             <li key={label} className={`${step === index ? "step-current" : ""} ${complete ? "step-complete" : ""}`}>
               <button type="button" aria-current={step === index ? "step" : undefined} disabled={disabled} onClick={() => onSelect?.(index)}>

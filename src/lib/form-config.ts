@@ -1,26 +1,24 @@
 export const IVA_OPTIONS = [
   "Responsable Inscripto",
-  "Monotributista",
   "Exento",
-  "Consumidor Final",
-  "Otro",
 ] as const;
 
+export const PAYMENT_OPTIONS = ["Cheque", "Transferencia"] as const;
+
 export const FIELDS = {
-  razonSocial: { label: "Razón Social", maxLength: 180, autoComplete: "section-empresa organization" },
-  nombreComercial: { label: "Nombre Comercial", maxLength: 180, optional: true, autoComplete: "off" },
-  responsableStand: { label: "Nombre y Apellido del responsable del stand", maxLength: 160, autoComplete: "section-stand name", wide: true },
-  telefonoStand: { label: "Teléfono del responsable del stand", maxLength: 40, type: "tel", autoComplete: "section-stand tel" },
-  emailStand: { label: "Email del responsable del stand", maxLength: 254, type: "email", autoComplete: "section-stand email" },
-  nombreStand: { label: "Nombre con el que se identificará el stand en ExpoRed", maxLength: 180, autoComplete: "off", wide: true },
-  razonSocialFacturacion: { label: "Razón Social para facturación", maxLength: 180, autoComplete: "section-facturacion organization", wide: true },
-  responsablePago: { label: "Nombre y Apellido del responsable del pago", maxLength: 160, autoComplete: "section-pago name", wide: true },
-  telefonoPago: { label: "Teléfono del responsable del pago", maxLength: 40, type: "tel", autoComplete: "section-pago tel" },
-  emailPago: { label: "Email del responsable del pago", maxLength: 254, type: "email", autoComplete: "section-pago email" },
+  razonSocial: { label: "Razón Social (para la facturación)", maxLength: 180, autoComplete: "section-empresa organization", wide: true },
+  nombreComercial: { label: "Nombre Comercial (repetir si es igual a la Razón Social)", maxLength: 180, autoComplete: "organization", wide: true },
+  responsableStand: { label: "Nombre y Apellido (del responsable y toma de decisiones sobre el stand)", maxLength: 160, autoComplete: "section-stand name", wide: true },
+  telefonoStand: { label: "Teléfono (del responsable y toma de decisiones sobre el stand)", maxLength: 40, type: "tel", autoComplete: "section-stand tel" },
+  emailStand: { label: "Mail (del responsable y toma de decisiones sobre el stand)", maxLength: 254, type: "email", autoComplete: "section-stand email" },
+  nombreStand: { label: "Nombre del Stand (nombre por el cual será identificado en la Expo, puede ser el mismo al comercial)", maxLength: 180, autoComplete: "off", wide: true },
+  responsablePago: { label: "Nombre y Apellido (del responsable del pago)", maxLength: 160, autoComplete: "section-pago name", wide: true },
+  telefonoPago: { label: "Teléfono (del responsable del pago)", maxLength: 40, type: "tel", autoComplete: "section-pago tel" },
+  emailPago: { label: "Mail (del responsable del pago)", maxLength: 254, type: "email", autoComplete: "section-pago email" },
   cuit: { label: "CUIT", maxLength: 13, autoComplete: "off", hint: "Ingresalo con o sin guiones." },
   condicionIVA: { label: "Condición frente al IVA", maxLength: 60, type: "select", autoComplete: "off" },
-  formaPago: { label: "Forma de pago", maxLength: 250, autoComplete: "off", wide: true },
-  detalleFactura: { label: "Detalle / texto para el cuerpo de la factura", maxLength: 2000, type: "textarea", autoComplete: "off", wide: true },
+  formaPago: { label: "Forma de pago", maxLength: 30, type: "choice", autoComplete: "off", options: PAYMENT_OPTIONS, wide: true },
+  detalleFactura: { label: "Detalle (texto para el cuerpo de la factura)", maxLength: 2000, type: "textarea", autoComplete: "off", wide: true },
 } satisfies Record<string, FieldConfig>;
 
 export type FieldConfig = {
@@ -31,6 +29,7 @@ export type FieldConfig = {
   type?: string;
   wide?: boolean;
   hint?: string;
+  options?: readonly string[];
 };
 export type FieldName = keyof typeof FIELDS;
 export type FormValues = Record<FieldName, string>;

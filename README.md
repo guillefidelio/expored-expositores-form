@@ -42,11 +42,11 @@ The browser suite starts the production build at `127.0.0.1:3100` and a separate
 
 Coverage includes:
 
-- All 13 required fields, optional commercial name, email, telephone, CUIT checksum, field lengths, and configurable IVA choices.
+- All 13 required fields from the previous Google Form, email, telephone, CUIT checksum, field lengths, two IVA choices, and two payment choices.
 - Server validation independent of the browser, allowlisted payload keys, normalization, honeypot, JSON/body limits, origin checks, and rate limiting.
-- Actual browser → local Route Handler → mock webhook delivery, with and without `?reserva=ABC123`.
+- Actual browser → local Route Handler → mock webhook delivery with the exact Google Form field set.
 - Loading state and duplicate-click prevention, confirmed success, upstream failure, a real 10-second upstream timeout, preserved values, and retry identifiers.
-- Editable company-name copying; keyboard error focus and accessible descriptions; 320px, 375px and desktop layout; reduced motion; loaded logo; runtime errors.
+- Three-step onboarding navigation; keyboard error focus and accessible descriptions; 320px, 375px and desktop layout; reduced motion; loaded logo; runtime errors.
 
 Screenshots are written to `artifacts/desktop.png` and `artifacts/mobile-375.png`. Test artifacts are ignored by Git. Browser automation is Chromium-based; no claim of full Safari/Firefox coverage is made.
 
@@ -69,8 +69,8 @@ Available modes: `success` (HTTP 200), `failure` (HTTP 503), `timeout` (12-secon
 | File | Responsibility |
 | --- | --- |
 | `src/lib/form-config.ts` | Labels, field lengths, IVA choices, Spanish success/failure copy |
-| `src/lib/validation.ts` | Shared client/server validation, CUIT checksum, reservation normalization |
-| `src/components/exhibitor-form.tsx` | Form interaction, accessible errors, copy checkbox, loading/success states |
+| `src/lib/validation.ts` | Shared client/server validation and CUIT checksum |
+| `src/components/exhibitor-form.tsx` | Three-step form interaction, accessible errors, loading/success states |
 | `src/components/form-field.tsx` | Labels and controls with autocomplete and error descriptions |
 | `src/app/globals.css` | Responsive ExpoRed design, focus and reduced-motion rules |
 | `src/app/api/expositores/route.ts` | Public POST handler, Node.js runtime, 30-second platform budget |
@@ -78,7 +78,7 @@ Available modes: `success` (HTTP 200), `failure` (HTTP 503), `timeout` (12-secon
 | `src/lib/request-limits.ts` | Bounded body parsing and best-effort rate limiter |
 | `scripts/` | Local mock tools only |
 
-Change `IVA_OPTIONS` in `src/lib/form-config.ts` to change both the UI options and server allowlist. No contractual payment options are assumed: `formaPago` remains free text.
+`IVA_OPTIONS` and `PAYMENT_OPTIONS` in `src/lib/form-config.ts` drive both the UI choices and server allowlists. The current choices are only `Responsable Inscripto` / `Exento` and `Cheque` / `Transferencia`.
 
 The official logo is bundled at `public/logoexpored27.png`, using the 595 × 255 transparent PNG supplied by the user. It is served locally on a navy background; the form does not depend on the WordPress site at runtime. Typography uses the system Arial/Helvetica stack without external font requests.
 
@@ -89,15 +89,13 @@ The browser sends JSON to the same-origin `/api/expositores`. The server reads t
 Payload keys:
 
 ```text
-submissionId, submittedAt, reservationReference,
+submissionId, submittedAt,
 razonSocial, nombreComercial, responsableStand, telefonoStand, emailStand,
-nombreStand, razonSocialFacturacion, responsablePago, telefonoPago,
-emailPago, cuit, condicionIVA, formaPago, detalleFactura
+nombreStand, responsablePago, telefonoPago, emailPago, cuit, condicionIVA,
+formaPago, detalleFactura
 ```
 
-All form values are trimmed strings. Optional `nombreComercial` is `""` when empty. CUIT is always 11 digits after check-digit validation. Meaningful invoice line breaks are preserved. Unknown properties and the honeypot are never forwarded.
-
-`reservationReference` is a string or `null`, captured from `?reserva=ABC123` without showing another question. References support 1–100 letters, digits, underscores, dots, or hyphens. An invalid query reference is ignored; an invalid reference sent directly to the API is rejected. The reference is administrative metadata, not authentication or proof of a reservation. Never put CUIT, contact information, or other private data in links. The application does not add personal information to URLs or persist form values in browser storage.
+All form values are trimmed strings. Every field is required. CUIT is always 11 digits after check-digit validation. Meaningful invoice line breaks are preserved. Unknown properties and the honeypot are never forwarded. The app does not add reservation metadata or personal information to URLs.
 
 `submittedAt` is a server-generated UTC ISO timestamp for the delivery attempt. `submissionId` is a server-generated SHA-256 identifier derived from a random browser attempt key and the normalized submission. Unchanged retries from the same mounted form reuse that ID, even across server instances. Changed values or reloading the page create a different ID. Direct API requests may omit `Idempotency-Key`; then the server supplies a random seed. A supplied key must be a UUID v4.
 
@@ -108,7 +106,7 @@ A Make 2xx response is the only path to browser success. This confirms webhook a
 | Status | Meaning |
 | --- | --- |
 | 200 | Make returned 2xx |
-| 400 | Malformed JSON/metadata, invalid retry key or filled honeypot |
+| 400 | Malformed JSON, invalid retry key or filled honeypot |
 | 403 | Cross-origin browser request |
 | 408 | Request body was not read within 5 seconds |
 | 413 / 415 | Body exceeds 16 KiB / unsupported content type |

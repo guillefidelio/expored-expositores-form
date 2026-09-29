@@ -5,12 +5,11 @@ export const validSubmission = {
   telefonoStand: "+54 11 0000 0000",
   emailStand: "stand@example.invalid",
   nombreStand: "Stand de prueba",
-  razonSocialFacturacion: "PRUEBA LOCAL Facturación",
   responsablePago: "Persona de prueba",
   telefonoPago: "+54 11 0000 0001",
   emailPago: "pagos@example.invalid",
   cuit: "30-12345678-1",
   condicionIVA: "Responsable Inscripto",
-  formaPago: "Según acuerdo comercial de prueba",
+  formaPago: "Transferencia",
   detalleFactura: "Datos ficticios para una prueba local. Sin efectos comerciales.",
 };

@@ -1,6 +1,6 @@
 import { createHash, randomUUID } from "node:crypto";
 import { FAILURE_MESSAGE } from "./form-config";
-import { normalizeReservation, validateForm } from "./validation";
+import { validateForm } from "./validation";
 import { rateLimit, readJsonBody, RequestBodyError } from "./request-limits";
 
 type Dependencies = {
@@ -56,13 +56,11 @@ export async function submitExpositor(request: Request, overrides: Partial<Depen
     if (body.website !== undefined && (typeof body.website !== "string" || body.website.trim())) return fail(400);
     const result = validateForm(body);
     if (!result.valid) return response({ ok: false, errors: result.errors }, 422);
-    const reservationReference = normalizeReservation(body.reservationReference);
-    if (body.reservationReference != null && !reservationReference) return fail(400);
     const target = webhookTarget(deps.webhookUrl);
     if (!target) return fail(503);
     const key = request.headers.get("idempotency-key");
     if (key && !/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i.test(key)) return fail(400);
-    const normalized = { reservationReference, ...result.data };
+    const normalized = result.data;
     // Same browser attempt + same normalized data gives the same server-generated ID.
     // Make must deduplicate this ID; no submission data is persisted here.
     const submissionId = createHash("sha256").update(key ?? randomUUID()).update(JSON.stringify(normalized)).digest("hex");
