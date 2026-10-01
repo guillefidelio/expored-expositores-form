@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { EMPTY_VALUES, FAILURE_MESSAGE, FIELD_NAMES, SUCCESS_MESSAGE, type FieldErrors, type FieldName, type FormValues } from "@/lib/form-config";
+import { EMPTY_VALUES, FAILURE_MESSAGE, FIELD_NAMES, SUCCESS_MESSAGE, isFieldVisible, type FieldErrors, type FieldName, type FormValues } from "@/lib/form-config";
 import { validateForm } from "@/lib/validation";
 import { FormField } from "./form-field";
 import { FormProgress } from "./form-progress";
@@ -31,11 +31,14 @@ export function ExhibitorForm() {
   }, [status]);
 
   function update(name: FieldName, value: string) {
-    setValues((previous) => ({
-      ...previous,
-      [name]: value,
-    }));
-    setErrors((previous) => ({ ...previous, [name]: undefined }));
+    const nextValues = { ...values, [name]: value };
+    for (const field of FIELD_NAMES) if (!isFieldVisible(field, nextValues)) nextValues[field] = "";
+    setValues(nextValues);
+    setErrors((previous) => {
+      const nextErrors = { ...previous, [name]: undefined };
+      for (const field of FIELD_NAMES) if (!isFieldVisible(field, nextValues)) delete nextErrors[field];
+      return nextErrors;
+    });
   }
 
   function blur(name: FieldName) {
@@ -145,7 +148,7 @@ export function ExhibitorForm() {
       <fieldset className="form-section" disabled={status === "sending"}>
         <legend id="step-heading" tabIndex={-1}>{["Datos de la empresa", "Datos del expositor", "Gestión de pago"][step]}</legend>
         <p className="section-description">{["Razón social y nombre comercial de tu empresa.", "Datos del responsable que toma las decisiones sobre el stand.", "Información de la persona responsable del pago y la factura."][step]}</p>
-        <div className="fields-grid">{STEP_FIELDS[step].map(renderField)}</div>
+        <div className="fields-grid">{STEP_FIELDS[step].filter((name) => isFieldVisible(name, values)).map(renderField)}</div>
       </fieldset>
       <div className="honeypot" aria-hidden="true" inert>
         <label htmlFor="website">Dejá este campo vacío</label>

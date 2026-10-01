@@ -91,11 +91,14 @@ Payload keys:
 ```text
 submissionId, submittedAt,
 razonSocial, nombreComercial, responsableStand, telefonoStand, emailStand,
-nombreStand, responsablePago, telefonoPago, emailPago, cuit, condicionIVA,
+nombreStand, responsablePago, telefonoPago, emailPago, cuit,
+agenteRetencion, impuestosRetencion, jurisdiccionIngresosBrutos, otrosImpuestosRetencion, condicionIVA,
 formaPago, detalleFactura
 ```
 
-All form values are trimmed strings. Every field is required. CUIT is always 11 digits after check-digit validation. Meaningful invoice line breaks are preserved. Unknown properties and the honeypot are never forwarded. The app does not add reservation metadata or personal information to URLs.
+All form values are trimmed strings. Visible fields are required. The CUIT input accepts only digits and stops at 11 characters; shorter values fail validation. Hyphens, spaces, and letters cannot be entered. Server validation also requires exactly 11 digits and a valid check digit. Meaningful invoice line breaks are preserved. Unknown properties and the honeypot are never forwarded. The app does not add reservation metadata or personal information to URLs.
+
+After CUIT, `agenteRetencion` requires `Sí` or `No`. Choosing `Sí` requires at least one tax: `IVA`, `Ganancias`, `Ingresos Brutos`, or `Otros`. `impuestosRetencion` is a string joined with `; ` in that fixed order. Selecting Ingresos Brutos requires `jurisdiccionIngresosBrutos`; selecting Otros requires `otrosImpuestosRetencion`. Hidden fields are cleared in the UI and normalized to empty strings by the server, including stale values from direct API requests. Add these four keys to the Make/Sheets mapping when configuring the integration; no live scenario has been modified.
 
 `submittedAt` is a server-generated UTC ISO timestamp for the delivery attempt. `submissionId` is a server-generated SHA-256 identifier derived from a random browser attempt key and the normalized submission. Unchanged retries from the same mounted form reuse that ID, even across server instances. Changed values or reloading the page create a different ID. Direct API requests may omit `Idempotency-Key`; then the server supplies a random seed. A supplied key must be a UUID v4.
 

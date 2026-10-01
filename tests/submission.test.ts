@@ -13,7 +13,7 @@ function request(body: unknown = validSubmission, headers: Record<string, string
 }
 const defaults = { webhookUrl: "https://hook.example.com/local-test-only", limit: () => 0 };
 
-test("Make 2xx produces only minimal success with exactly the Google Form payload", async () => {
+test("Make 2xx produces minimal success and includes the retention fields", async () => {
   let payload: Record<string, unknown> = {};
   const result = await submitExpositor(request({ ...validSubmission, website: "", injected: "omit" }), {
     ...defaults,
@@ -24,7 +24,11 @@ test("Make 2xx produces only minimal success with exactly the Google Form payloa
   assert.equal(payload.cuit, "30123456781");
   assert.match(String(payload.submissionId), /^[a-f0-9]{64}$/);
   assert.ok(!Number.isNaN(Date.parse(String(payload.submittedAt))));
-  assert.equal(Object.keys(payload).length, 15);
+  assert.equal(Object.keys(payload).length, 19);
+  assert.equal(payload.agenteRetencion, "No");
+  assert.equal(payload.impuestosRetencion, "");
+  assert.equal(payload.jurisdiccionIngresosBrutos, "");
+  assert.equal(payload.otrosImpuestosRetencion, "");
   assert.equal(payload.website, undefined);
   assert.equal(payload.injected, undefined);
 });
@@ -55,7 +59,13 @@ test("validation, honeypot, malformed data, origins, content type and oversize r
   const cases: [Request, number][] = [
     [request({}), 422],
     [request({ ...validSubmission, cuit: "30123456782" }), 422],
+    [request({ ...validSubmission, cuit: "3012345678" }), 422],
+    [request({ ...validSubmission, cuit: "301234567811" }), 422],
+    [request({ ...validSubmission, cuit: "3012345678x" }), 422],
+    [request({ ...validSubmission, cuit: "30-12345678-1" }), 422],
     [request({ ...validSubmission, emailStand: "invalid" }), 422],
+    [request({ ...validSubmission, agenteRetencion: "Sí" }), 422],
+    [request({ ...validSubmission, agenteRetencion: "Sí", impuestosRetencion: "Ingresos Brutos" }), 422],
     [request({ ...validSubmission, website: "spam" }), 400],
     [request(validSubmission, { Origin: "https://other.example" }), 403],
     [request(validSubmission, { "Content-Type": "text/plain" }), 415],

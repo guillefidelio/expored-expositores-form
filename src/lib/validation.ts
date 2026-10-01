@@ -1,7 +1,7 @@
-import { FIELDS, FIELD_NAMES, IVA_OPTIONS, PAYMENT_OPTIONS, type FieldConfig, type FieldErrors, type FormValues } from "./form-config";
+import { FIELDS, FIELD_NAMES, IVA_OPTIONS, PAYMENT_OPTIONS, RETENTION_OPTIONS, TAX_OPTIONS, isFieldVisible, type FieldConfig, type FieldErrors, type FormValues } from "./form-config";
 
 export function normalizeCuit(value: string): string {
-  return value.trim().replace(/-/g, "");
+  return value.trim();
 }
 export function isValidCuit(value: string): boolean {
   const digits = normalizeCuit(value);
@@ -18,6 +18,10 @@ export function validateForm(input: unknown): { data: FormValues; errors: FieldE
   const data = {} as FormValues;
   for (const name of FIELD_NAMES) {
     const config: FieldConfig = FIELDS[name];
+    if (!isFieldVisible(name, data)) {
+      data[name] = "";
+      continue;
+    }
     const value = raw[name];
     data[name] = typeof value === "string" ? value.trim() : "";
     if (value !== undefined && typeof value !== "string") {
@@ -38,6 +42,15 @@ export function validateForm(input: unknown): { data: FormValues; errors: FieldE
   data.cuit = normalizeCuit(data.cuit);
   if (data.condicionIVA && !(IVA_OPTIONS as readonly string[]).includes(data.condicionIVA)) errors.condicionIVA = "Seleccioná una condición frente al IVA válida.";
   if (data.formaPago && !(PAYMENT_OPTIONS as readonly string[]).includes(data.formaPago)) errors.formaPago = "Seleccioná una forma de pago válida.";
+  if (data.agenteRetencion && !(RETENTION_OPTIONS as readonly string[]).includes(data.agenteRetencion)) errors.agenteRetencion = "Seleccioná Sí o No.";
+  if (data.agenteRetencion === "Sí" && !errors.impuestosRetencion) {
+    const taxes = data.impuestosRetencion.split("; ");
+    if (taxes.some((tax) => !(TAX_OPTIONS as readonly string[]).includes(tax)) || new Set(taxes).size !== taxes.length) {
+      errors.impuestosRetencion = "Seleccioná impuestos válidos.";
+    } else {
+      data.impuestosRetencion = TAX_OPTIONS.filter((tax) => taxes.includes(tax)).join("; ");
+    }
+  }
   return { data, errors, valid: Object.keys(errors).length === 0 };
 }
 
