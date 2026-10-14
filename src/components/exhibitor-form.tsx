@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { EMPTY_VALUES, FAILURE_MESSAGE, FIELD_NAMES, SUCCESS_MESSAGE, isFieldVisible, type FieldErrors, type FieldName, type FormValues } from "@/lib/form-config";
+import { EMPTY_VALUES, FAILURE_MESSAGE, FIELDS, FIELD_NAMES, SUCCESS_MESSAGE, isFieldVisible, type FieldErrors, type FieldName, type FormValues } from "@/lib/form-config";
 import { validateForm } from "@/lib/validation";
 import { FormField } from "./form-field";
 import { FormProgress } from "./form-progress";
@@ -11,6 +11,8 @@ const STEP_FIELDS = [
   FIELD_NAMES.slice(2, 6),
   FIELD_NAMES.slice(6),
 ] as const;
+const STEP_TITLES = ["Datos de la empresa", "Datos del expositor", "Gestión de pago", "Revisión final"];
+const REVIEW_STEP = STEP_FIELDS.length;
 
 export function ExhibitorForm() {
   const [values, setValues] = useState<FormValues>({ ...EMPTY_VALUES });
@@ -58,7 +60,7 @@ export function ExhibitorForm() {
     if (nextStep > step) {
       const validation = validateForm(values);
       const currentErrors: FieldErrors = {};
-      for (const name of STEP_FIELDS[step]) if (validation.errors[name]) currentErrors[name] = validation.errors[name];
+      for (const name of STEP_FIELDS.slice(0, nextStep).flat()) if (validation.errors[name]) currentErrors[name] = validation.errors[name];
       if (Object.keys(currentErrors).length) {
         setErrors(currentErrors);
         setValidationNotice(true);
@@ -80,7 +82,7 @@ export function ExhibitorForm() {
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (sending.current) return;
-    if (step < STEP_FIELDS.length - 1) {
+    if (step < REVIEW_STEP) {
       changeStep(step + 1);
       return;
     }
@@ -127,7 +129,7 @@ export function ExhibitorForm() {
   if (status === "success") {
     return (
       <>
-      <FormProgress step={3} completedSteps={[true, true, true]} disabled />
+      <FormProgress step={4} completedSteps={[true, true, true, true]} disabled />
       <div className="success-card" ref={successRef} tabIndex={-1} role="status">
         <span className="success-icon" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="m8 16 5 5 11-11" /></svg></span>
         <p className="eyebrow">EXPORED 2027</p>
@@ -144,11 +146,16 @@ export function ExhibitorForm() {
     <>
     <FormProgress step={step} completedSteps={completedSteps} disabled={status === "sending"} onSelect={changeStep} />
     <form ref={formRef} noValidate onSubmit={submit} className="form-surface" aria-busy={status === "sending"}>
-      <div className="form-note"><span className="step-counter">PASO {step + 1} DE 3</span><span>Los campos con <strong>*</strong> son obligatorios.</span></div>
+      <div className="form-note"><span className="step-counter">PASO {step + 1} DE 4</span><span>{step === REVIEW_STEP ? "Comprobá tus datos antes de enviarlos." : <>Los campos con <strong>*</strong> son obligatorios.</>}</span></div>
       <fieldset className="form-section" disabled={status === "sending"}>
-        <legend id="step-heading" tabIndex={-1}>{["Datos de la empresa", "Datos del expositor", "Gestión de pago"][step]}</legend>
-        <p className="section-description">{["Razón social y nombre comercial de tu empresa.", "Datos del responsable que toma las decisiones sobre el stand.", "Información de la persona responsable del pago y la factura."][step]}</p>
-        <div className="fields-grid">{STEP_FIELDS[step].filter((name) => isFieldVisible(name, values)).map(renderField)}</div>
+        <legend id="step-heading" tabIndex={-1}>{STEP_TITLES[step]}</legend>
+        <p className="section-description">{["Razón social y nombre comercial de tu empresa.", "Datos del responsable que toma las decisiones sobre el stand.", "Información de la persona responsable del pago y la factura.", "Revisá la información. Si necesitás corregir algo, podés editar cada sección antes de confirmar el envío."][step]}</p>
+        {step === REVIEW_STEP ? <div className="review-sections">
+          {STEP_FIELDS.map((fields, index) => <section className="review-section" key={STEP_TITLES[index]} aria-labelledby={`review-heading-${index}`}>
+            <div className="review-heading"><h3 id={`review-heading-${index}`}>{STEP_TITLES[index]}</h3><button type="button" className="back-button" onClick={() => changeStep(index)} aria-label={`Editar ${STEP_TITLES[index]}`}>Editar</button></div>
+            <dl>{fields.filter((name) => isFieldVisible(name, values)).map((name) => <div className="review-field" key={name}><dt>{FIELDS[name].label}</dt><dd>{values[name].trim() || "Sin completar"}</dd></div>)}</dl>
+          </section>)}
+        </div> : <div className="fields-grid">{STEP_FIELDS[step].filter((name) => isFieldVisible(name, values)).map(renderField)}</div>}
       </fieldset>
       <div className="honeypot" aria-hidden="true" inert>
         <label htmlFor="website">Dejá este campo vacío</label>
@@ -160,7 +167,7 @@ export function ExhibitorForm() {
         <div className="submit-row">
           {step === 0 ? <p>A continuación: datos del expositor.</p> : <button type="button" className="back-button" disabled={status === "sending"} onClick={() => changeStep(step - 1)}><span aria-hidden="true">←</span> Volver</button>}
           <button type="submit" className="submit-button" disabled={status === "sending"}>
-            {status === "sending" ? <><span className="spinner" aria-hidden="true" />Enviando datos…</> : step < STEP_FIELDS.length - 1 ? <>Continuar <span aria-hidden="true">→</span></> : <>Enviar datos <span aria-hidden="true">↗</span></>}
+            {status === "sending" ? <><span className="spinner" aria-hidden="true" />Enviando datos…</> : step < REVIEW_STEP ? <>{step === REVIEW_STEP - 1 ? "Revisar datos" : "Continuar"} <span aria-hidden="true">→</span></> : <>Enviar datos <span aria-hidden="true">↗</span></>}
           </button>
         </div>
         <span className="sr-only" role="status">{status === "sending" ? "Enviando los datos. Esperá un momento." : ""}</span>

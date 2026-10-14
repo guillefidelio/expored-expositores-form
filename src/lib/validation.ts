@@ -41,7 +41,14 @@ export function validateForm(input: unknown): { data: FormValues; errors: FieldE
   if (data.cuit && !errors.cuit && !isValidCuit(data.cuit)) errors.cuit = "Ingresá un CUIT válido de 11 dígitos.";
   data.cuit = normalizeCuit(data.cuit);
   if (data.condicionIVA && !(IVA_OPTIONS as readonly string[]).includes(data.condicionIVA)) errors.condicionIVA = "Seleccioná una condición frente al IVA válida.";
-  if (data.formaPago && !(PAYMENT_OPTIONS as readonly string[]).includes(data.formaPago)) errors.formaPago = "Seleccioná una forma de pago válida.";
+  if (data.formaPago && !errors.formaPago) {
+    const payments = data.formaPago.split("; ");
+    if (payments.some((payment) => !(PAYMENT_OPTIONS as readonly string[]).includes(payment)) || new Set(payments).size !== payments.length) {
+      errors.formaPago = "Seleccioná formas de pago válidas.";
+    } else {
+      data.formaPago = PAYMENT_OPTIONS.filter((payment) => payments.includes(payment)).join("; ");
+    }
+  }
   if (data.agenteRetencion && !(RETENTION_OPTIONS as readonly string[]).includes(data.agenteRetencion)) errors.agenteRetencion = "Seleccioná Sí o No.";
   if (data.agenteRetencion === "Sí" && !errors.impuestosRetencion) {
     const taxes = data.impuestosRetencion.split("; ");

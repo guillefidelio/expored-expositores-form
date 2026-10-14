@@ -1,4 +1,4 @@
-const STEPS = ["Datos de la empresa", "Datos del expositor", "Gestión de pago"];
+const STEPS = ["Datos de la empresa", "Datos del expositor", "Gestión de pago", "Revisión final"];
 
 type Props = {
   step: number;

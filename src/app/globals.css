@@ -31,9 +31,9 @@ h1 { margin: 0 0 12px; font-size: clamp(28px, 3vw, 34px); line-height: 1.15; let
 .form-note { padding: 14px 28px; display: flex; align-items: center; justify-content: space-between; gap: 10px; border-bottom: 1px solid var(--line); font-size: 11px; color: var(--muted); }
 .form-note strong { color: var(--navy); }
 .step-counter { color: var(--navy); font-size: 10px; font-weight: 700; letter-spacing: .1em; white-space: nowrap; }
-.form-progress { margin: 0 auto 24px; max-width: 470px; }
-.progress-list { display: grid; grid-template-columns: repeat(3, 1fr); list-style: none; padding: 0; margin: 0; position: relative; }
-.progress-list::before { content: ""; position: absolute; top: 18px; left: 16.66%; right: 16.66%; height: 1px; background: #bbcdd6; }
+.form-progress { margin: 0 auto 24px; max-width: 600px; }
+.progress-list { display: grid; grid-template-columns: repeat(4, 1fr); list-style: none; padding: 0; margin: 0; position: relative; }
+.progress-list::before { content: ""; position: absolute; top: 18px; left: 12.5%; right: 12.5%; height: 1px; background: #bbcdd6; }
 .progress-list.first-complete::before { background: #168d8a; }
 .progress-list li { position: relative; text-align: center; }
 .progress-list button { display: flex; align-items: center; flex-direction: column; gap: 6px; border: 0; color: var(--muted); background: transparent; width: 100%; padding: 0 6px; border-radius: 10px; }
@@ -55,6 +55,13 @@ h1 { margin: 0 0 12px; font-size: clamp(28px, 3vw, 34px); line-height: 1.15; let
 .form-section legend { padding: 0; display: flex; align-items: center; gap: 13px; font-weight: 700; font-size: 18px; letter-spacing: -.02em; width: 100%; }
 .section-description { margin: 8px 0 22px; font-size: 12px; color: var(--muted); line-height: 1.5; }
 .fields-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px 20px; }
+.review-section + .review-section { border-top: 1px solid var(--line); margin-top: 24px; padding-top: 24px; }
+.review-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.review-heading h3 { margin: 0; font-size: 15px; }
+.review-section dl { margin: 16px 0 0; display: grid; gap: 16px; }
+.review-field { min-width: 0; }
+.review-field dt { color: var(--muted); font-size: 12px; line-height: 1.5; }
+.review-field dd { margin: 4px 0 0; font-size: 14px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }
 .field { min-width: 0; }
 .field-wide { grid-column: 1 / -1; }
 .field > label { display: block; font-size: 12px; font-weight: 600; line-height: 1.5; margin-bottom: 7px; }

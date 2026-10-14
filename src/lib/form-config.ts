@@ -23,7 +23,7 @@ export const FIELDS = {
   jurisdiccionIngresosBrutos: { label: "Ingresos Brutos — Jurisdicción", maxLength: 180, autoComplete: "off", wide: true },
   otrosImpuestosRetencion: { label: "Otros — Indique los impuestos", maxLength: 300, autoComplete: "off", wide: true },
   condicionIVA: { label: "Condición frente al IVA", maxLength: 60, type: "select", autoComplete: "off" },
-  formaPago: { label: "Forma de pago", maxLength: 30, type: "choice", autoComplete: "off", options: PAYMENT_OPTIONS, wide: true },
+  formaPago: { label: "Forma de pago", maxLength: 30, type: "multichoice", autoComplete: "off", options: PAYMENT_OPTIONS, hint: "Seleccioná una o ambas formas de pago.", wide: true },
   detalleFactura: { label: "Detalle (texto para el cuerpo de la factura)", maxLength: 2000, type: "textarea", autoComplete: "off", wide: true },
 } satisfies Record<string, FieldConfig>;
 

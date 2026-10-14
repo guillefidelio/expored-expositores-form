@@ -67,6 +67,7 @@ test("normalization trims edges but preserves meaningful multiline invoice text"
 test("only the requested IVA values and payment methods are accepted", () => {
   for (const value of ["Responsable Inscripto", "Exento"]) assert.ok(validateForm({ ...validSubmission, condicionIVA: value }).valid);
   for (const value of ["Monotributista", "Consumidor Final", "Otro"]) assert.ok(validateForm({ ...validSubmission, condicionIVA: value }).errors.condicionIVA);
-  for (const value of ["Cheque", "Transferencia"]) assert.ok(validateForm({ ...validSubmission, formaPago: value }).valid);
-  assert.ok(validateForm({ ...validSubmission, formaPago: "Efectivo" }).errors.formaPago);
+  for (const value of ["Cheque", "Transferencia", "Cheque; Transferencia"]) assert.ok(validateForm({ ...validSubmission, formaPago: value }).valid);
+  for (const value of ["", "Efectivo", "Cheque; Efectivo", "Cheque; Cheque", "Ambas"]) assert.ok(validateForm({ ...validSubmission, formaPago: value }).errors.formaPago);
+  assert.equal(validateForm({ ...validSubmission, formaPago: "Transferencia; Cheque" }).data.formaPago, "Cheque; Transferencia");
 });

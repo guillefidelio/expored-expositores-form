@@ -78,7 +78,7 @@ Available modes: `success` (HTTP 200), `failure` (HTTP 503), `timeout` (12-secon
 | `src/lib/request-limits.ts` | Bounded body parsing and best-effort rate limiter |
 | `scripts/` | Local mock tools only |
 
-`IVA_OPTIONS` and `PAYMENT_OPTIONS` in `src/lib/form-config.ts` drive both the UI choices and server allowlists. The current choices are only `Responsable Inscripto` / `Exento` and `Cheque` / `Transferencia`.
+`IVA_OPTIONS` and `PAYMENT_OPTIONS` in `src/lib/form-config.ts` drive both the UI choices and server allowlists. The current choices are `Responsable Inscripto` / `Exento` and payment checkboxes for `Cheque` / `Transferencia`. At least one payment method is required; selecting both sends `formaPago: "Cheque; Transferencia"` to Make.
 
 The official logo is bundled at `public/logoexpored27.png`, using the 595 × 255 transparent PNG supplied by the user. It is served locally on a navy background; the form does not depend on the WordPress site at runtime. Typography uses the system Arial/Helvetica stack without external font requests.
 

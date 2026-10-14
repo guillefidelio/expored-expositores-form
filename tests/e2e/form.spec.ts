@@ -5,7 +5,10 @@ import { FAILURE_MESSAGE, SUCCESS_MESSAGE } from "../../src/lib/form-config";
 async function fillFields(page: Page, fields: Record<string, string>) {
   for (const [name, value] of Object.entries(fields)) {
     if (name === "condicionIVA") await page.locator(`#${name}`).selectOption(value);
-    else if (name === "formaPago" || name === "agenteRetencion") await page.locator(`#${name}`).getByText(value, { exact: true }).click();
+    else if (name === "formaPago") {
+      for (const option of ["Cheque", "Transferencia"]) await page.locator(`#${name}`).getByRole("checkbox", { name: option, exact: true }).setChecked(value.split("; ").includes(option));
+    }
+    else if (name === "agenteRetencion") await page.locator(`#${name}`).getByText(value, { exact: true }).click();
     else await page.locator(`#${name}`).fill(value);
   }
 }
@@ -41,10 +44,10 @@ test("invalid email, CUIT and payment choices show inline errors", async ({ page
   await fillFields(page, { responsableStand: validSubmission.responsableStand, telefonoStand: validSubmission.telefonoStand, emailStand: validSubmission.emailStand, nombreStand: validSubmission.nombreStand });
   await page.getByRole("button", { name: "Continuar", exact: true }).click();
   await page.locator("#cuit").fill("30123456782");
-  await page.getByRole("button", { name: "Enviar datos" }).click();
+  await page.getByRole("button", { name: "Revisar datos" }).click();
   await expect(page.locator("#cuit-error")).toHaveText("Ingresá un CUIT válido de 11 dígitos.");
-  await expect(page.getByRole("radio", { name: "Cheque" })).toBeVisible();
-  await expect(page.getByRole("radio", { name: "Transferencia" })).toBeVisible();
+  await expect(page.getByRole("checkbox", { name: "Cheque" })).toBeVisible();
+  await expect(page.getByRole("checkbox", { name: "Transferencia" })).toBeVisible();
 });
 
 test("CUIT blocks non-digits and a twelfth digit, and rejects ten digits", async ({ page, request }) => {
@@ -58,7 +61,7 @@ test("CUIT blocks non-digits and a twelfth digit, and rejects ten digits", async
   await cuit.pressSequentially("abc- .+e");
   await expect(cuit).toHaveValue("");
   await cuit.pressSequentially("3012345678");
-  await page.getByRole("button", { name: "Enviar datos" }).click();
+  await page.getByRole("button", { name: "Revisar datos" }).click();
   await expect(page.locator("#cuit-error")).toHaveText("Ingresá un CUIT válido de 11 dígitos.");
   expect(await (await request.get("http://127.0.0.1:4011/__deliveries")).json()).toHaveLength(0);
   await cuit.press("End");
@@ -73,6 +76,7 @@ test("CUIT blocks non-digits and a twelfth digit, and rejects ten digits", async
   await expect(cuit).toHaveValue(validSubmission.cuit);
   await cuit.press("ControlOrMeta+A");
   await page.keyboard.insertText("30123456781");
+  await page.getByRole("button", { name: "Revisar datos" }).click();
   await page.getByRole("button", { name: "Enviar datos" }).click();
   await expect(page.getByText(SUCCESS_MESSAGE)).toBeVisible();
 });
@@ -85,13 +89,13 @@ test("retention fields validate, clear hidden details and reach Make", async ({ 
   await page.getByRole("button", { name: "Continuar", exact: true }).click();
   await fillFields(page, { responsablePago: validSubmission.responsablePago, telefonoPago: validSubmission.telefonoPago, emailPago: validSubmission.emailPago, cuit: validSubmission.cuit, condicionIVA: validSubmission.condicionIVA, formaPago: validSubmission.formaPago, detalleFactura: validSubmission.detalleFactura });
   await expect(page.locator("#impuestosRetencion")).toHaveCount(0);
-  await page.getByRole("button", { name: "Enviar datos" }).click();
+  await page.getByRole("button", { name: "Revisar datos" }).click();
   await expect(page.locator("#agenteRetencion-error")).toBeVisible();
   await fillFields(page, { agenteRetencion: "Sí" });
-  await page.getByRole("button", { name: "Enviar datos" }).click();
+  await page.getByRole("button", { name: "Revisar datos" }).click();
   await expect(page.locator("#impuestosRetencion-error")).toBeVisible();
   for (const tax of ["IVA", "Ganancias", "Ingresos Brutos", "Otros"]) await page.getByRole("checkbox", { name: tax, exact: true }).check();
-  await page.getByRole("button", { name: "Enviar datos" }).click();
+  await page.getByRole("button", { name: "Revisar datos" }).click();
   await expect(page.locator("#jurisdiccionIngresosBrutos-error")).toBeVisible();
   await expect(page.locator("#otrosImpuestosRetencion-error")).toBeVisible();
   await fillFields(page, { jurisdiccionIngresosBrutos: "Buenos Aires", otrosImpuestosRetencion: "Impuesto de prueba" });
@@ -113,6 +117,7 @@ test("retention fields validate, clear hidden details and reach Make", async ({ 
   await page.setViewportSize({ width: 375, height: 812 });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   await page.screenshot({ path: "artifacts/retention-mobile.png", fullPage: true });
+  await page.getByRole("button", { name: "Revisar datos" }).click();
   await page.getByRole("button", { name: "Enviar datos" }).click();
   await expect(page.getByText(SUCCESS_MESSAGE)).toBeVisible();
   const deliveries = await (await request.get("http://127.0.0.1:4011/__deliveries")).json();
@@ -127,11 +132,31 @@ test("successful submission sends the form fields and prevents duplicates", asyn
   await fillFields(page, { responsableStand: validSubmission.responsableStand, telefonoStand: validSubmission.telefonoStand, emailStand: validSubmission.emailStand, nombreStand: validSubmission.nombreStand });
   await page.getByRole("button", { name: "Continuar", exact: true }).click();
   await fillFields(page, { agenteRetencion: validSubmission.agenteRetencion, responsablePago: validSubmission.responsablePago, telefonoPago: validSubmission.telefonoPago, emailPago: validSubmission.emailPago, cuit: validSubmission.cuit, condicionIVA: validSubmission.condicionIVA, formaPago: validSubmission.formaPago, detalleFactura: validSubmission.detalleFactura });
+  await page.getByRole("checkbox", { name: "Cheque", exact: true }).check();
+  await expect(page.getByRole("checkbox", { name: "Transferencia", exact: true })).toBeChecked();
+  await page.getByRole("checkbox", { name: "Cheque", exact: true }).uncheck();
+  await expect(page.getByRole("checkbox", { name: "Transferencia", exact: true })).toBeChecked();
+  await page.getByRole("checkbox", { name: "Cheque", exact: true }).check();
+  await page.getByRole("button", { name: "Revisar datos" }).click();
+  await expect(page.locator(".review-sections")).toContainText("Cheque; Transferencia");
+  await expect(page.locator('[aria-current="step"]')).toContainText("Revisión final");
+  await expect(page.locator("#step-heading")).toBeFocused();
+  await expect(page.locator(".review-sections")).toContainText(validSubmission.emailPago);
+  await expect(page.locator(".review-sections")).not.toContainText("Ingresos Brutos — Jurisdicción");
+  expect(await (await request.get("http://127.0.0.1:4011/__deliveries")).json()).toHaveLength(0);
+  await page.getByRole("button", { name: "Editar Datos de la empresa" }).click();
+  await expect(page.locator("#razonSocial")).toHaveValue(validSubmission.razonSocial);
+  await page.locator("#nombreComercial").fill("Empresa corregida");
+  await page.getByRole("button", { name: /Revisión final/ }).click();
+  await expect(page.locator(".review-sections")).toContainText("Empresa corregida");
+  await page.setViewportSize({ width: 375, height: 812 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  await page.screenshot({ path: "artifacts/review-mobile.png", fullPage: true });
   await page.getByRole("button", { name: "Enviar datos" }).evaluate((button: HTMLButtonElement) => { button.click(); button.click(); });
   await expect(page.getByText(SUCCESS_MESSAGE)).toBeVisible();
   const deliveries = await (await request.get("http://127.0.0.1:4011/__deliveries")).json();
   expect(deliveries).toHaveLength(1);
-  expect(deliveries[0]).toMatchObject({ cuit: "30123456781", condicionIVA: "Responsable Inscripto", formaPago: "Transferencia", agenteRetencion: "No", impuestosRetencion: "", jurisdiccionIngresosBrutos: "", otrosImpuestosRetencion: "" });
+  expect(deliveries[0]).toMatchObject({ nombreComercial: "Empresa corregida", cuit: "30123456781", condicionIVA: "Responsable Inscripto", formaPago: "Cheque; Transferencia", agenteRetencion: "No", impuestosRetencion: "", jurisdiccionIngresosBrutos: "", otrosImpuestosRetencion: "" });
   expect(deliveries[0].reservationReference).toBeUndefined();
   expect(deliveries[0].razonSocialFacturacion).toBeUndefined();
 });
@@ -144,8 +169,10 @@ test("Make failure preserves values and never shows success", async ({ page, req
   await fillFields(page, { responsableStand: validSubmission.responsableStand, telefonoStand: validSubmission.telefonoStand, emailStand: validSubmission.emailStand, nombreStand: validSubmission.nombreStand });
   await page.getByRole("button", { name: "Continuar", exact: true }).click();
   await fillFields(page, { agenteRetencion: validSubmission.agenteRetencion, responsablePago: validSubmission.responsablePago, telefonoPago: validSubmission.telefonoPago, emailPago: validSubmission.emailPago, cuit: validSubmission.cuit, condicionIVA: validSubmission.condicionIVA, formaPago: validSubmission.formaPago, detalleFactura: validSubmission.detalleFactura });
+  await page.getByRole("button", { name: "Revisar datos" }).click();
   await page.getByRole("button", { name: "Enviar datos" }).click();
   await expect(page.getByText(FAILURE_MESSAGE)).toBeVisible();
+  await page.getByRole("button", { name: "Editar Gestión de pago" }).click();
   await expect(page.locator("#emailPago")).toHaveValue(validSubmission.emailPago);
   await expect(page.getByText(SUCCESS_MESSAGE)).toHaveCount(0);
 });
